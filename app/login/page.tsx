@@ -1,45 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "../../lib/store";
 import { api } from "../../lib/api";
 import { Mail } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
-import { createIconComponent } from "../../lib/icons";
 
-const GoogleIcon = createIconComponent(FcGoogle);
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void;
+          prompt: () => void;
+          renderButton: (element: HTMLElement, config: { theme?: string; size?: string; text?: string; width?: number }) => void;
+        };
+      };
+    };
+  }
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { setUser } = useStore();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleClientId = "48423023352-35p1749s47120ur82n5hbeah8ui62h1k.apps.googleusercontent.com";
 
-  const handleGoogleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = useCallback(async (response: { credential: string }) => {
     setLoading(true);
     try {
-      const response = await api.authGoogle(email, name);
-      setUser(response.user);
-      localStorage.setItem("token", "dummy-token"); // TODO: Use real token from backend
+      const result = await api.authGoogle(response.credential);
+      setUser(result.user);
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
       router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
+      alert("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [setUser, router]);
 
-  const handleAzureLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!googleClientId) {
+      console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set");
+      return;
+    }
+
+    // Load Google Identity Services script
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google && googleButtonRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleSignIn,
+        });
+
+        // Render the button
+        if (googleButtonRef.current) {
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: "outline",
+            size: "large",
+            text: "signin_with",
+            width: 300,
+          });
+        }
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup: remove script if component unmounts
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, [googleClientId, handleGoogleSignIn]);
+
+
+  const handleAzureLogin = async () => {
     setLoading(true);
     try {
-      const response = await api.authAzure(email, name);
-      setUser(response.user);
-      localStorage.setItem("token", "dummy-token"); // TODO: Use real token from backend
-      router.push("/");
+      // TODO: Implement Azure OAuth similar to Google
+      alert("Azure login is not yet implemented");
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -60,59 +109,44 @@ export default function LoginPage() {
           Sign in to access your inbox
         </p>
 
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="your@email.com"
-              required
-            />
+        <div className="space-y-4">
+          {googleClientId ? (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <div ref={googleButtonRef} id="google-signin-button"></div>
+              </div>
+              {loading && (
+                <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                  Signing in...
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-sm text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              Google OAuth is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables.
+            </div>
+          )}
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Your Name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-            >
-              <GoogleIcon className="h-5 w-5" />
-              <span>Continue with Google</span>
-            </button>
-            <button
-              type="submit"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Signing in..." : "Sign in with Google"}
-            </button>
-            <button
-              type="submit"
-              onClick={handleAzureLogin}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Signing in..." : "Sign in with Azure"}
-            </button>
-          </div>
-        </form>
+
+          <button
+            type="button"
+            onClick={handleAzureLogin}
+            disabled={loading}
+            className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Signing in..." : "Sign in with Azure"}
+          </button>
+        </div>
       </div>
     </div>
   );

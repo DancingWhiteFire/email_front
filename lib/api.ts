@@ -1,6 +1,7 @@
 // API client for backend communication
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || " https://dee8c390eeb5.ngrok-free.app";
 
 class ApiClient {
   private baseUrl: string;
@@ -14,7 +15,8 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     const config: RequestInit = {
       ...options,
@@ -28,16 +30,28 @@ class ApiClient {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Unknown error" }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Unknown error" }));
+      throw new Error(
+        error.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     return response.json();
   }
 
   // Auth
-  async authGoogle(email: string, name: string) {
-    return this.request<{ user: User }>("/auth/google", {
+  async authGoogle(idToken: string) {
+    return this.request<{ user: User; token: string }>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ idToken }),
+    });
+  }
+
+  // Legacy auth method (for backward compatibility)
+  async authGoogleLegacy(email: string, name: string) {
+    return this.request<{ user: User; token: string }>("/auth/google/legacy", {
       method: "POST",
       body: JSON.stringify({ email, name, provider: "google" }),
     });
@@ -84,7 +98,10 @@ class ApiClient {
     });
   }
 
-  async generateDraft(threadContext: string, tone: Tone = "short"): Promise<AIDraftResponse> {
+  async generateDraft(
+    threadContext: string,
+    tone: Tone = "short"
+  ): Promise<AIDraftResponse> {
     return this.request<AIDraftResponse>("/ai/draft", {
       method: "POST",
       body: JSON.stringify({ threadContext, tone }),
@@ -96,21 +113,31 @@ class ApiClient {
     return this.request<Task[]>(`/tasks?ownerId=${ownerId}`);
   }
 
-  async createTask(data: { title: string; ownerId: string; dueDate?: string }): Promise<Task> {
+  async createTask(data: {
+    title: string;
+    ownerId: string;
+    dueDate?: string;
+  }): Promise<Task> {
     return this.request<Task>("/tasks", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async createTaskFromEmail(emailId: string, data: { title: string; ownerId: string; dueDate?: string }): Promise<Task> {
+  async createTaskFromEmail(
+    emailId: string,
+    data: { title: string; ownerId: string; dueDate?: string }
+  ): Promise<Task> {
     return this.request<Task>(`/tasks/from-email/${emailId}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateTask(id: string, data: { title?: string; status?: TaskStatus; dueDate?: string }): Promise<Task> {
+  async updateTask(
+    id: string,
+    data: { title?: string; status?: TaskStatus; dueDate?: string }
+  ): Promise<Task> {
     return this.request<Task>(`/tasks/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -125,7 +152,14 @@ class ApiClient {
 }
 
 // Re-export types
-import type { Email, Task, Tone, AISummaryResponse, AIDraftResponse, TaskStatus, User } from "./types";
+import type {
+  Email,
+  Task,
+  Tone,
+  AISummaryResponse,
+  AIDraftResponse,
+  TaskStatus,
+  User,
+} from "./types";
 
 export const api = new ApiClient(API_BASE_URL);
-
