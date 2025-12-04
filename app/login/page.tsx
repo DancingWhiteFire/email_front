@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useStore } from "../../lib/store";
-import { api } from "../../lib/api";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { Mail } from "lucide-react";
 
 declare global {
@@ -11,9 +11,20 @@ declare global {
     google?: {
       accounts: {
         id: {
-          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void;
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
           prompt: () => void;
-          renderButton: (element: HTMLElement, config: { theme?: string; size?: string; text?: string; width?: number }) => void;
+          renderButton: (
+            element: HTMLElement,
+            config: {
+              theme?: string;
+              size?: string;
+              text?: string;
+              width?: number;
+            }
+          ) => void;
         };
       };
     };
@@ -25,23 +36,27 @@ export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useStore();
   const googleButtonRef = useRef<HTMLDivElement>(null);
-  const googleClientId = "48423023352-35p1749s47120ur82n5hbeah8ui62h1k.apps.googleusercontent.com";
+  const googleClientId =
+    "48423023352-35p1749s47120ur82n5hbeah8ui62h1k.apps.googleusercontent.com";
 
-  const handleGoogleSignIn = useCallback(async (response: { credential: string }) => {
-    setLoading(true);
-    try {
-      const result = await api.authGoogle(response.credential);
-      setUser(result.user);
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
-      router.push("/");
-    } catch (error) {
-      console.error("Login failed:", error);
-      alert("Login failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [setUser, router]);
+  const handleGoogleSignIn = useCallback(
+    async (response: { credential: string }) => {
+      setLoading(true);
+      try {
+        const result = await api.authGoogle(response.credential);
+        setUser(result.user);
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("user", JSON.stringify(result.user));
+        router.push("/");
+      } catch (error) {
+        console.error("Login failed:", error);
+        alert("Login failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setUser, router]
+  );
 
   useEffect(() => {
     if (!googleClientId) {
@@ -76,18 +91,18 @@ export default function LoginPage() {
 
     return () => {
       // Cleanup: remove script if component unmounts
-      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      const existingScript = document.querySelector(
+        'script[src="https://accounts.google.com/gsi/client"]'
+      );
       if (existingScript) {
         existingScript.remove();
       }
     };
   }, [googleClientId, handleGoogleSignIn]);
 
-
   const handleAzureLogin = async () => {
     setLoading(true);
     try {
-      // TODO: Implement Azure OAuth similar to Google
       alert("Azure login is not yet implemented");
     } catch (error) {
       console.error("Login failed:", error);
@@ -123,7 +138,8 @@ export default function LoginPage() {
             </div>
           ) : (
             <div className="text-center text-sm text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-              Google OAuth is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables.
+              Google OAuth is not configured. Please set
+              NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables.
             </div>
           )}
 

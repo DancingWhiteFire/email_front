@@ -1,7 +1,7 @@
 // API client for backend communication
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || " https://dee8c390eeb5.ngrok-free.app";
+  process.env.NEXT_PUBLIC_API_URL || "https://cde867bd13ee.ngrok-free.app";
 
 class ApiClient {
   private baseUrl: string;
