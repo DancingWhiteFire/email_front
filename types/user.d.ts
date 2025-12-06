@@ -1,10 +1,22 @@
-// Shared types for the application
+import { PLAN_VALUES } from "@/constant/data";
 
-export interface User {
+export interface UserType {
   id: string;
-  email: string;
   name: string;
-  plan: "free" | "pro" | "team";
+  address: string | null;
+  avatar: string | null;
+  phone: string | null;
+  plan: (typeof PLAN_VALUES)[keyof typeof PLAN_VALUES];
+  mails: {
+    google?: UserEmailType;
+    microsoft?: UserEmailType;
+  };
+}
+
+export interface UserEmailType {
+  mailId: string;
+  email: string;
+  picture?: string;
 }
 
 export interface Email {
@@ -44,4 +56,3 @@ export interface AIDraftResponse {
 export type EmailStatus = "inbox" | "archived" | "deleted" | "pinned";
 export type TaskStatus = "todo" | "in-progress" | "done";
 export type Tone = "formal" | "casual" | "friendly" | "short";
-

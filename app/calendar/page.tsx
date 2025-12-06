@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CommandPalette } from "../../components/CommandPalette";
 import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 
 export default function CalendarPage() {
@@ -9,8 +8,6 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <CommandPalette />
-
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -21,7 +18,9 @@ export default function CalendarPage() {
           </button>
           <div className="flex items-center gap-2">
             <CalendarIcon className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Calendar</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Calendar
+            </h1>
           </div>
         </div>
 
@@ -38,4 +37,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-

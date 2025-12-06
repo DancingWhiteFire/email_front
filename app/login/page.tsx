@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
-import { api } from "@/lib/api";
 import { Mail } from "lucide-react";
+
+import { GOOGLE_CLIENT_ID } from "@/lib/env";
+import { useStore } from "@/store/user";
 
 declare global {
   interface Window {
@@ -34,37 +35,25 @@ declare global {
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setUser } = useStore();
+  // const { setUser } = useStore();
+  const authGoogle = useStore((state) => state.authGoogle);
   const googleButtonRef = useRef<HTMLDivElement>(null);
-  const googleClientId =
-    "48423023352-35p1749s47120ur82n5hbeah8ui62h1k.apps.googleusercontent.com";
 
   const handleGoogleSignIn = useCallback(
     async (response: { credential: string }) => {
-      setLoading(true);
-      try {
-        const result = await api.authGoogle(response.credential);
-        setUser(result.user);
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("user", JSON.stringify(result.user));
-        router.push("/");
-      } catch (error) {
-        console.error("Login failed:", error);
-        alert("Login failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+      await authGoogle(response.credential);
+      const token = localStorage.getItem("token");
+      if (token) router.push("/dash");
     },
-    [setUser, router]
+    [authGoogle, router]
   );
 
   useEffect(() => {
-    if (!googleClientId) {
+    if (!GOOGLE_CLIENT_ID) {
       console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set");
       return;
     }
 
-    // Load Google Identity Services script
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -72,33 +61,27 @@ export default function LoginPage() {
     script.onload = () => {
       if (window.google && googleButtonRef.current) {
         window.google.accounts.id.initialize({
-          client_id: googleClientId,
+          client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
         });
 
-        // Render the button
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            theme: "outline",
-            size: "large",
-            text: "signin_with",
-            width: 300,
-          });
-        }
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          text: "signin_with",
+          width: 300,
+        });
       }
     };
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup: remove script if component unmounts
       const existingScript = document.querySelector(
         'script[src="https://accounts.google.com/gsi/client"]'
       );
-      if (existingScript) {
-        existingScript.remove();
-      }
+      if (existingScript) existingScript.remove();
     };
-  }, [googleClientId, handleGoogleSignIn]);
+  }, [handleGoogleSignIn]);
 
   const handleAzureLogin = async () => {
     setLoading(true);
@@ -125,10 +108,10 @@ export default function LoginPage() {
         </p>
 
         <div className="space-y-4">
-          {googleClientId ? (
+          {GOOGLE_CLIENT_ID ? (
             <div className="space-y-4">
               <div className="flex justify-center">
-                <div ref={googleButtonRef} id="google-signin-button"></div>
+                <div ref={googleButtonRef} id="google-signin-button" />
               </div>
               {loading && (
                 <div className="text-center text-sm text-gray-600 dark:text-gray-400">
@@ -145,7 +128,7 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
