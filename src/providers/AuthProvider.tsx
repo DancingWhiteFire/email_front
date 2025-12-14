@@ -30,5 +30,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, [authVerify, router, setToken]);
 
-  return <>{token === null || isLoading ? <Loader /> : children}</>;
+  return <>{isLoading ? <Loader /> : children}</>;
 };
