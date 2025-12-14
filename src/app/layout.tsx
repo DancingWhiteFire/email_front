@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <div className="min-h-screen dark:bg-boxdark-2 dark:text-bodydark">
+        <div className=" dark:bg-boxdark-2 dark:text-bodydark">
           <GoogleOAuthProvider clientId={clientId}>
             <AuthProvider>{children}</AuthProvider>
           </GoogleOAuthProvider>
