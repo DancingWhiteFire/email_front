@@ -30,7 +30,7 @@ const Settings = () => {
               <button
                 className={`${user?.connected ? "border-green-500 text-green-400" : "border-red-500 text-red-400"} inline-flex items-center justify-center gap-2.5 rounded-full border px-2 py-1 text-center font-medium hover:bg-opacity-90 lg:px-3 xl:px-4`}
                 onClick={connectGmail}
-                disabled={user?.connected}
+                // disabled={user?.connected}
               >
                 <LucideIcon
                   iconName={user?.connected ? "CircleCheck" : "CircleAlert"}

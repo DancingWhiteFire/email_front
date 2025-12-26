@@ -17,7 +17,7 @@ export interface UserType {
 export interface UserEmailType {
   mailId: string;
   email: string;
-  picture?: string;
+  picture: string;
 }
 
 export interface Email {

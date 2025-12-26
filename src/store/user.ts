@@ -2,10 +2,9 @@
 
 import { create } from "zustand";
 import type { UserType, Email, Task } from "@/types/store/user";
-import { BACKEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "@/lib/env";
+import { BACKEND_URL } from "@/lib/env";
 import { apis } from "@/lib/api";
 import { AUTH_VALUES } from "@/constant/data";
-import axios from "axios";
 
 interface UserAppState {
   user: UserType | null;
@@ -100,6 +99,7 @@ export const useStore = create<UserAppState>((set) => ({
       const result = await apis
         .get(`${BACKEND_URL}/auth/me`)
         .then((res) => res.data);
+      console.log(result);
       set({ user: result.user });
       return result;
     } catch (err) {

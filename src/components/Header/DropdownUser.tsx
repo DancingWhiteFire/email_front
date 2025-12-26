@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user } = useStore();
   const router = useRouter();
   const logout = useStore((state) => state.logout);
   const handleSignOut = useCallback(async () => {
@@ -33,7 +34,7 @@ const DropdownUser = () => {
           <Image
             width={112}
             height={112}
-            src={"/images/user/user-01.png"}
+            src={user?.mails.google?.picture || "/images/user/user-01.png"}
             style={{
               width: "auto",
               height: "auto",

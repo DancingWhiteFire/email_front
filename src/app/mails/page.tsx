@@ -43,7 +43,7 @@ const MailsPage: React.FC = () => {
     const res = await apis.get("/emails/gmail").then((res) => res.data);
     console.log(res);
   }, []);
-  const notifyGmail = useCallback(async () => {
+  const forwardingGmail = useCallback(async () => {
     const res = await apis.get("/emails/gmail/sync").then((res) => res.data);
     console.log(res);
   }, []);
@@ -52,9 +52,6 @@ const MailsPage: React.FC = () => {
   //   console.log(res);
   // }, []);
 
-  // useEffect(() => {
-  //   getGmail();
-  // }, [getGmail]);
   return (
     <DefaultLayout>
       {/* <button
@@ -65,7 +62,13 @@ const MailsPage: React.FC = () => {
       </button> */}
       <button
         className="inline-flex items-center justify-center gap-2.5 rounded-full bg-primary px-10 py-4 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
-        onClick={notifyGmail}
+        onClick={forwardingGmail}
+      >
+        <LucideIcon iconName="Mail" /> Forwarding Gmail
+      </button>
+      <button
+        className="inline-flex items-center justify-center gap-2.5 rounded-full bg-primary px-10 py-4 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
+        onClick={getGmail}
       >
         <LucideIcon iconName="Mail" /> Get Gmail
       </button>
